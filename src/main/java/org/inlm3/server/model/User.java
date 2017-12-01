@@ -1,11 +1,13 @@
 package org.inlm3.server.model;
 
+import org.inlm3.common.UserDTO;
+
 import javax.persistence.*;
 import java.io.Serializable;
 
 @Entity
 @Table(name="User")
-public class User implements Serializable {
+public class User implements UserDTO {
 
     @Id
     @Column(name = "id", nullable = false)
@@ -30,6 +32,7 @@ public class User implements Serializable {
         return userId;
     }
 
+    @Override
     public String getUsername() {
         return username;
     }

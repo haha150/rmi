@@ -17,7 +17,7 @@ public class File implements FileDTO {
     private String fileName;
 
     @Column(name = "size", nullable = false)
-    private String fileSize;
+    private int fileSize;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "owner", nullable = false)
@@ -28,7 +28,7 @@ public class File implements FileDTO {
 
     public File() {}
 
-    public File(String fileName, String fileSize, User fileOwner, String filePermission) {
+    public File(String fileName, int fileSize, User fileOwner, String filePermission) {
         this.fileName = fileName;
         this.fileSize = fileSize;
         this.fileOwner = fileOwner;
@@ -39,15 +39,18 @@ public class File implements FileDTO {
         return fileId;
     }
 
+    @Override
     public String getFileName() {
         return fileName;
     }
 
+    @Override
     public String getUsername() {
         return fileOwner.getUsername();
     }
 
-    public String getFileSize() {
+    @Override
+    public int getFileSize() {
         return fileSize;
     }
 
@@ -55,6 +58,7 @@ public class File implements FileDTO {
         return fileOwner;
     }
 
+    @Override
     public String getFilePermission() {
         return filePermission;
     }

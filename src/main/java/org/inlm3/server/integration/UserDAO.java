@@ -32,18 +32,23 @@ public class UserDAO {
         session.close();
     }
 
-    public void unegisterUser(String username) throws UserDoesNotExistException {
+    public void unegisterUser(String username, String password) throws UserDoesNotExistException, WrongCredentialsException {
         User user = getUserByName(username);
 
         // check if user exists!
-        if(user != null) {
+        if(user == null) {
+            throw new UserDoesNotExistException();
+        }
+
+        if(user.getPassword().equals(password)) {
             Session session = sessionFactory.getSession();
             session.beginTransaction();
             session.delete(user);
             session.getTransaction().commit();
             session.close();
+        } else {
+            throw new WrongCredentialsException();
         }
-        throw new UserDoesNotExistException();
     }
 
     private boolean doesUserExist(String username) {
