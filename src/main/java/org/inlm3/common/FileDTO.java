@@ -8,4 +8,6 @@ public interface FileDTO extends Serializable {
     public String getUsername();
     public int getFileSize();
     public String getFilePermission();
+    public boolean isRead();
+    public boolean isWrite();
 }

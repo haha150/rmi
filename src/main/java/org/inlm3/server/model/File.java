@@ -26,13 +26,21 @@ public class File implements FileDTO {
     @Column(name = "permission", nullable = false)
     private String filePermission;
 
+    @Column(name = "isReadable", nullable = false)
+    private boolean read;
+
+    @Column(name = "isWriteable", nullable = false)
+    private boolean write;
+
     public File() {}
 
-    public File(String fileName, int fileSize, User fileOwner, String filePermission) {
+    public File(String fileName, int fileSize, User fileOwner, String filePermission, boolean read, boolean write) {
         this.fileName = fileName;
         this.fileSize = fileSize;
         this.fileOwner = fileOwner;
         this.filePermission = filePermission;
+        this.read = read;
+        this.write = write;
     }
 
     public long getFileId() {
@@ -81,5 +89,21 @@ public class File implements FileDTO {
 
     public void setFilePermission(String filePermission) {
         this.filePermission = filePermission;
+    }
+
+    public boolean isRead() {
+        return read;
+    }
+
+    public void setRead(boolean read) {
+        this.read = read;
+    }
+
+    public boolean isWrite() {
+        return write;
+    }
+
+    public void setWrite(boolean write) {
+        this.write = write;
     }
 }

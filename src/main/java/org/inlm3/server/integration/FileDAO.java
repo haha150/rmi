@@ -1,6 +1,7 @@
 package org.inlm3.server.integration;
 
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.inlm3.server.exception.FileAlreadyExistsException;
 import org.inlm3.server.exception.FileDoesNotExistException;
 import org.inlm3.server.exception.PermissionDeniedException;
@@ -23,10 +24,9 @@ public class FileDAO {
 
         String query = "from File";
 
-        session.beginTransaction();
+        Transaction transaction = session.beginTransaction();
         List<File> files = session.createQuery(query).list();
         session.getTransaction().commit();
-
         session.close();
 
         List<File> remove = new ArrayList<>();
@@ -68,9 +68,9 @@ public class FileDAO {
         return files;
     }
 
-    public void addFile(User user, String name, int size, String permission) throws FileAlreadyExistsException {
+    public void addFile(User user, String name, int size, String permission, boolean read, boolean write) throws FileAlreadyExistsException {
 
-        File file = new File(name,size,user,permission);
+        File file = new File(name,size,user,permission,read,write);
 
         if(doesFileExist(name)) {
             throw new FileAlreadyExistsException();
@@ -120,10 +120,12 @@ public class FileDAO {
         session.close();
     }
 
-    public void editFile(String oldName, String newName, String permission) {
+    public void editFile(String oldName, String newName, String permission, boolean read, boolean write) {
         File file = getFileByName(oldName);
         file.setFileName(newName);
         file.setFilePermission(permission);
+        file.setRead(read);
+        file.setWrite(write);
         Session session = sessionFactory.getSession();
         session.beginTransaction();
         session.update(file);

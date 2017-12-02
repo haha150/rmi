@@ -37,6 +37,10 @@ public class View extends BorderPane {
     private Button chooseFile;
     private FileChooser fileChooser;
     private DirectoryChooser fileSaver;
+    private CheckBox read;
+    private CheckBox write;
+    private CheckBox read2;
+    private CheckBox write2;
 
     public View(Stage primaryStage) {
         this.primaryStage = primaryStage;
@@ -146,12 +150,20 @@ public class View extends BorderPane {
         perm.setText("Permission:");
         permission = new TextField();
         permission.setText("public");
+        Label r = new Label();
+        r.setText("Read:");
+        read = new CheckBox();
+        read.setSelected(true);
+        Label w = new Label();
+        w.setText("Write:");
+        write = new CheckBox();
+        write.setSelected(true);
         Label file = new Label();
         file.setText("File:");
         chooseFile = new Button();
         chooseFile.setText("Choose file");
 
-        container.getChildren().addAll(perm,permission,file,chooseFile);
+        container.getChildren().addAll(perm,permission,file,chooseFile,r,read,w,write);
 
         uploadDialog = new Dialog();
         uploadDialog.setResizable(false);
@@ -169,8 +181,16 @@ public class View extends BorderPane {
         Label perm = new Label();
         perm.setText("Permission:");
         permission2 = new TextField();
+        Label r = new Label();
+        r.setText("Read:");
+        read2 = new CheckBox();
+        read2.setSelected(true);
+        Label w = new Label();
+        w.setText("Write:");
+        write2 = new CheckBox();
+        write2.setSelected(true);
 
-        container.getChildren().addAll(file,name,perm,permission2);
+        container.getChildren().addAll(file,name,perm,permission2,r,read2,w,write2);
 
         editDialog = new Dialog();
         editDialog.setResizable(false);
@@ -195,7 +215,8 @@ public class View extends BorderPane {
         EventHandler<WindowEvent> closeHandler = event -> controller.handleClose(event, primaryStage);
         primaryStage.setOnCloseRequest(closeHandler);
 
-        EventHandler<ActionEvent> buttonHandler = event -> controller.handleButton(event, primaryStage, uploadDialog, permission, permission2, name, editDialog);
+        EventHandler<ActionEvent> buttonHandler = event -> controller.handleButton(event, primaryStage, uploadDialog,
+                permission, permission2, name, editDialog, read, write, read2, write2);
 
         for(Button b : buttons) {
             b.setOnAction(buttonHandler);

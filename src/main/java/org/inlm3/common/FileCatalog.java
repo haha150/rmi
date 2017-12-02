@@ -20,13 +20,13 @@ public interface FileCatalog extends Remote {
 
     public void notifyMe(String username, String fileName) throws RemoteException;
 
-    public boolean upload(String username, String name, int size, String permission) throws RemoteException, FileAlreadyExistsException;
+    public boolean upload(String username, String name, int size, String permission, boolean read, boolean write) throws RemoteException, FileAlreadyExistsException;
 
-    public void download(String username, String name) throws RemoteException, PermissionDeniedException;
+    public void download(String username, String name) throws RemoteException, PermissionDeniedException, FileDoesNotExistException;
 
-    public void editFile(String username, String oldName, String newName, String permission) throws RemoteException, PermissionDeniedException;
+    public void editFile(String username, String oldName, String newName, String permission, boolean read, boolean write) throws RemoteException, PermissionDeniedException, FileDoesNotExistException, UserDoesNotExistException;
 
-    public void deleteFile(String username, String name) throws RemoteException, FileDoesNotExistException, PermissionDeniedException;
+    public void deleteFile(String username, String name) throws RemoteException, FileDoesNotExistException, PermissionDeniedException, UserDoesNotExistException;
 
     public List<? extends NotificationDTO> pollNotifications(String username) throws RemoteException;
 }

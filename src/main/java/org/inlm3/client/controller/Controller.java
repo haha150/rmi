@@ -45,7 +45,7 @@ public class Controller {
     }
 
     public void handleButton(ActionEvent event, Stage primaryStage, Dialog dialog, TextField permission, TextField permission2, TextField nameField,
-                             Dialog editDialog) {
+                             Dialog editDialog, CheckBox read, CheckBox write, CheckBox read2, CheckBox write2) {
         Button b = (Button) event.getSource();
         switch (b.getText()) {
             case "List files":
@@ -54,7 +54,8 @@ public class Controller {
                     view.getData().clear();
                     for (FileDTO f : files) {
                         view.getData().add(f.getFileName() + ", Size: " + f.getFileSize() + ", Permission: " +
-                                f.getFilePermission() + ", Owner: " + f.getUsername());
+                                f.getFilePermission() + ", Owner: " + f.getUsername() + ", Read: " + f.isRead() + ", Write: "
+                        + f.isWrite());
                     }
                 } catch (RemoteException e) {
                     showAlert("Failed to communicate with server");
@@ -77,6 +78,8 @@ public class Controller {
                             showAlert("Failed to communicate with server");
                         } catch (PermissionDeniedException e) {
                             showAlert("Permission denied!");
+                        } catch (FileDoesNotExistException e) {
+                            showAlert("File does not exist");
                         }
                     }
                 } else {
@@ -87,8 +90,8 @@ public class Controller {
                 dialog.showAndWait();
                 if(file != null) {
                     try {
-                        System.out.println(permission.getText());
-                        if(fileCatalog.upload(user.getUsername(),file.getName(),(int)file.length(), permission.getText() != null ? permission.getText() : "public")) {
+                        if(fileCatalog.upload(user.getUsername(),file.getName(),(int)file.length(),
+                                permission.getText() != null ? permission.getText() : "public", read.isSelected(), write.isSelected())) {
                             FileTransfer fileTransfer = new FileTransfer("localhost", Constants.SERVER_PORT);
                             fileTransfer.send(file);
                         }
@@ -116,13 +119,20 @@ public class Controller {
                     if(file != null) {
                         nameField.setText(file.getFileName());
                         permission2.setText(file.getFilePermission());
+                        read2.setSelected(file.isRead());
+                        write2.setSelected(file.isWrite());
                         editDialog.showAndWait();
                         try {
-                            fileCatalog.editFile(user.getUsername(), file.getFileName(), nameField.getText(), permission2.getText());
+                            fileCatalog.editFile(user.getUsername(), file.getFileName(), nameField.getText(),
+                                    permission2.getText(), read2.isSelected(), write2.isSelected());
                         } catch (RemoteException e) {
                             showAlert("Failed to communicate with server");
                         } catch (PermissionDeniedException e) {
                             showAlert("Permission denied");
+                        } catch (FileDoesNotExistException e) {
+                            showAlert("File does not exist");
+                        } catch (UserDoesNotExistException e) {
+                            showAlert("User does not exist");
                         }
                     }
                 } else {
@@ -142,6 +152,8 @@ public class Controller {
                         showAlert("File does not exist.");
                     } catch (PermissionDeniedException e) {
                         showAlert("Permission denied.");
+                    } catch (UserDoesNotExistException e) {
+                        showAlert("User does not exist");
                     }
                 }
                 break;
