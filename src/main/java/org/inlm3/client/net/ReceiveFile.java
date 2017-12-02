@@ -21,7 +21,6 @@ public class ReceiveFile {
             OutputStream output = null;
             PrintWriter sout = null;
             try {
-                int bytesRead;
                 sin = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 String fileName = sin.readLine();
                 sout = new PrintWriter(clientSocket.getOutputStream(), true);
@@ -29,8 +28,9 @@ public class ReceiveFile {
                 in = clientSocket.getInputStream();
                 output = new FileOutputStream(filePath + "\\" + fileName);
                 byte[] buffer = new byte[1024];
-                while ((bytesRead = in.read(buffer)) != -1) {
-                    output.write(buffer, 0, bytesRead);
+                int bytes;
+                while ((bytes = in.read(buffer)) != -1) {
+                    output.write(buffer, 0, bytes);
                 }
             } catch (Exception e) {
                 System.out.println(e);
