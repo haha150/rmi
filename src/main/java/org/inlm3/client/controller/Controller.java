@@ -1,5 +1,6 @@
 package org.inlm3.client.controller;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
@@ -38,6 +39,7 @@ public class Controller {
     }
 
     public void handleClose(WindowEvent event, Stage primaryStage) {
+        loggedIn = false;
         event.consume();
         primaryStage.close();
     }
@@ -235,16 +237,22 @@ public class Controller {
 
     private class PollNotification implements Runnable {
 
+        private final Alert alert = new Alert(Alert.AlertType.INFORMATION);
+
         @Override
         public void run() {
             while(loggedIn) {
                 try {
                     StringBuilder sb = new StringBuilder();
                     List<NotificationDTO> notifications = (List<NotificationDTO>)fileCatalog.pollNotifications(user.getUsername());
-                    for(NotificationDTO n : notifications) {
-                        sb.append(n.getUser() + " did action: " + n.getAction() + "\n");
+                    if(notifications != null && !notifications.isEmpty()) {
+                        for(NotificationDTO n : notifications) {
+                            sb.append(n.getUser() + " did action: " + n.getAction() + "\n");
+                        }
+                        Platform.runLater(() -> {
+                            showAlert(sb.toString());
+                        });
                     }
-                    showAlert(sb.toString());
                 } catch (RemoteException e) {
                     showAlert("Failed to communicate with server");
                 }
@@ -254,6 +262,13 @@ public class Controller {
                     e.printStackTrace();
                 }
             }
+        }
+
+        public void showAlert(String message) {
+            alert.setHeaderText("");
+            alert.setTitle("Alert!");
+            alert.setContentText(message);
+            alert.show();
         }
     }
 }
