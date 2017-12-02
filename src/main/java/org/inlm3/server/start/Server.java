@@ -3,6 +3,7 @@ package org.inlm3.server.start;
 import org.inlm3.common.Constants;
 import org.inlm3.common.FileTransfer;
 import org.inlm3.server.controller.Controller;
+import org.inlm3.server.net.ReceiveFile;
 
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -11,7 +12,7 @@ import java.rmi.registry.LocateRegistry;
 
 public class Server {
 
-    private static final String FILE_PATH = "C:\\inlm3\\";
+    public static final String FILE_PATH = "C:\\inlm3\\";
 
     public Server() {}
 
@@ -25,7 +26,7 @@ public class Server {
         Naming.rebind("server", controller);
 
         new Thread(() -> {
-            FileTransfer fileTransfer = new FileTransfer("localhost", Constants.SERVER_PORT);
+            ReceiveFile fileTransfer = new ReceiveFile(Constants.SERVER_PORT);
             fileTransfer.receive(FILE_PATH);
         }).start();
     }

@@ -1,9 +1,6 @@
 package org.inlm3.common;
 
-import org.inlm3.server.exception.FileAlreadyExistsException;
-import org.inlm3.server.exception.UserAlreadyExistsException;
-import org.inlm3.server.exception.UserDoesNotExistException;
-import org.inlm3.server.exception.WrongCredentialsException;
+import org.inlm3.server.exception.*;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -21,9 +18,15 @@ public interface FileCatalog extends Remote {
 
     public List<? extends FileDTO> listFiles(String username) throws RemoteException;
 
-    public void notifyMe(String name) throws RemoteException;
+    public void notifyMe(String username, String fileName) throws RemoteException;
 
     public boolean upload(String username, String name, int size, String permission) throws RemoteException, FileAlreadyExistsException;
 
-    public void download() throws RemoteException;
+    public void download(String username, String name) throws RemoteException, PermissionDeniedException;
+
+    public void editFile(String username, String oldName, String newName, String permission) throws RemoteException, PermissionDeniedException;
+
+    public void deleteFile(String username, String name) throws RemoteException, FileDoesNotExistException, PermissionDeniedException;
+
+    public List<? extends NotificationDTO> pollNotifications(String username) throws RemoteException;
 }

@@ -19,7 +19,7 @@ public class File implements FileDTO {
     @Column(name = "size", nullable = false)
     private int fileSize;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = { CascadeType.MERGE, CascadeType.PERSIST })
     @JoinColumn(name = "owner", nullable = false)
     private User fileOwner;
 
@@ -61,5 +61,25 @@ public class File implements FileDTO {
     @Override
     public String getFilePermission() {
         return filePermission;
+    }
+
+    public void setFileId(int fileId) {
+        this.fileId = fileId;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public void setFileSize(int fileSize) {
+        this.fileSize = fileSize;
+    }
+
+    public void setFileOwner(User fileOwner) {
+        this.fileOwner = fileOwner;
+    }
+
+    public void setFilePermission(String filePermission) {
+        this.filePermission = filePermission;
     }
 }

@@ -8,6 +8,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import org.inlm3.client.controller.Controller;
@@ -21,18 +23,38 @@ public class View extends BorderPane {
     private ListView listView;
     private List<Button> buttons;
     private Dialog dialog;
+    private Dialog uploadDialog;
+    private Dialog editDialog;
     private TextField username;
+    private TextField permission;
+    private TextField permission2;
+    private TextField name;
     private PasswordField password;
     private MenuItem login;
     private MenuItem logout;
     private MenuItem register;
     private MenuItem unregister;
+    private Button chooseFile;
+    private FileChooser fileChooser;
+    private DirectoryChooser fileSaver;
 
     public View(Stage primaryStage) {
         this.primaryStage = primaryStage;
         data = FXCollections.observableArrayList();;
         buttons = new ArrayList<>();
         initView();
+    }
+
+    public ObservableList<String> getData() {
+        return data;
+    }
+
+    public ListView getListView() {
+        return listView;
+    }
+
+    public DirectoryChooser getFileSaver() {
+        return fileSaver;
     }
 
     private void initView() {
@@ -71,12 +93,27 @@ public class View extends BorderPane {
         edit.setDisable(true);
         buttons.add(edit);
 
-        hbox.getChildren().addAll(listFiles, download, upload, edit);
+        Button delete = new Button();
+        delete.setText("Delete");
+        delete.setDisable(true);
+        buttons.add(delete);
+
+        Button notify = new Button();
+        notify.setText("Notify");
+        notify.setDisable(true);
+        buttons.add(notify);
+
+        hbox.getChildren().addAll(listFiles, download, upload, edit, delete, notify);
+
+        fileSaver = new DirectoryChooser();
+        fileSaver.setTitle("Select file destination");
 
         this.setTop(menuBar);
         this.setCenter(listView);
         this.setBottom(hbox);
         initDialogView();
+        initUploadDialogView();
+        initEditDialogView();
     }
 
     private void initDialogView() {
@@ -100,6 +137,48 @@ public class View extends BorderPane {
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK,ButtonType.CANCEL);
     }
 
+    private void initUploadDialogView() {
+        fileChooser = new FileChooser();
+        fileChooser.setTitle("Open Resource File");
+        VBox container = new VBox();
+
+        Label perm = new Label();
+        perm.setText("Permission:");
+        permission = new TextField();
+        permission.setText("public");
+        Label file = new Label();
+        file.setText("File:");
+        chooseFile = new Button();
+        chooseFile.setText("Choose file");
+
+        container.getChildren().addAll(perm,permission,file,chooseFile);
+
+        uploadDialog = new Dialog();
+        uploadDialog.setResizable(false);
+        uploadDialog.setTitle("File chooser");
+        uploadDialog.getDialogPane().setContent(container);
+        uploadDialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK,ButtonType.CANCEL);
+    }
+
+    private void initEditDialogView() {
+        VBox container = new VBox();
+
+        Label file = new Label();
+        file.setText("Name:");
+        name = new TextField();
+        Label perm = new Label();
+        perm.setText("Permission:");
+        permission2 = new TextField();
+
+        container.getChildren().addAll(file,name,perm,permission2);
+
+        editDialog = new Dialog();
+        editDialog.setResizable(false);
+        editDialog.setTitle("Edit file");
+        editDialog.getDialogPane().setContent(container);
+        editDialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK,ButtonType.CANCEL);
+    }
+
     public void enableButtons() {
         for(Button b : buttons) {
             b.setDisable(false);
@@ -116,11 +195,14 @@ public class View extends BorderPane {
         EventHandler<WindowEvent> closeHandler = event -> controller.handleClose(event, primaryStage);
         primaryStage.setOnCloseRequest(closeHandler);
 
-        EventHandler<ActionEvent> buttonHandler = event -> controller.handleButton(event);
+        EventHandler<ActionEvent> buttonHandler = event -> controller.handleButton(event, primaryStage, uploadDialog, permission, permission2, name, editDialog);
 
         for(Button b : buttons) {
             b.setOnAction(buttonHandler);
         }
+
+        EventHandler<ActionEvent> chooseHandler = event -> controller.handleChoose(primaryStage,fileChooser);
+        chooseFile.setOnAction(chooseHandler);
 
         EventHandler<ActionEvent> loginHandler = event -> controller.loginHandler(dialog, username, password);
         login.setOnAction(loginHandler);

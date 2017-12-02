@@ -2,28 +2,33 @@ package org.inlm3.client.controller;
 
 import javafx.event.ActionEvent;
 import javafx.scene.control.*;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import org.inlm3.client.net.ReceiveFile;
 import org.inlm3.client.view.View;
-import org.inlm3.common.Constants;
-import org.inlm3.common.FileCatalog;
-import org.inlm3.common.FileTransfer;
-import org.inlm3.common.UserDTO;
+import org.inlm3.common.*;
 import org.inlm3.server.exception.*;
 
+import java.io.File;
 import java.rmi.RemoteException;
+import java.util.List;
 
 public class Controller {
     private static View view;
     private final Alert alert = new Alert(Alert.AlertType.INFORMATION);
     private FileCatalog fileCatalog;
     private UserDTO user;
+    private File file;
+    private List<FileDTO> files;
+    private volatile boolean loggedIn;
 
     public Controller(View view, FileCatalog fc) {
         this.view = view;
         this.fileCatalog = fc;
+        file = null;
+        loggedIn = false;
     }
-
 
     public void showAlert(String message) {
         alert.setHeaderText("");
@@ -37,31 +42,118 @@ public class Controller {
         primaryStage.close();
     }
 
-    public void handleButton(ActionEvent event) {
+    public void handleButton(ActionEvent event, Stage primaryStage, Dialog dialog, TextField permission, TextField permission2, TextField nameField,
+                             Dialog editDialog) {
         Button b = (Button) event.getSource();
         switch (b.getText()) {
             case "List files":
-                System.out.println("list files");
-                break;
-            case "Download":
-                System.out.println("Download files");
-                break;
-            case "Upload":
                 try {
-                    if(fileCatalog.upload(user.getUsername(),"steam.txt",42,"public")) {
-                        FileTransfer fileTransfer = new FileTransfer("localhost", Constants.SERVER_PORT);
-                        fileTransfer.send("D:\\Downloads\\steam.txt");
+                    files = (List<FileDTO>) fileCatalog.listFiles(user.getUsername());
+                    view.getData().clear();
+                    for (FileDTO f : files) {
+                        view.getData().add(f.getFileName() + ", Size: " + f.getFileSize() + ", Permission: " +
+                                f.getFilePermission() + ", Owner: " + f.getUsername());
                     }
                 } catch (RemoteException e) {
                     showAlert("Failed to communicate with server");
-                } catch (FileAlreadyExistsException e) {
-                    showAlert("File already exists!");
-                } catch (PermissionDeniedException e) {
-                    showAlert("Permission denied!");
+                }
+                break;
+            case "Download":
+                System.out.println("Download files");
+                String selectedItem = (String)view.getListView().getSelectionModel().getSelectedItem();
+                if(selectedItem != null) {
+                    File file = view.getFileSaver().showDialog(primaryStage);
+                    if(file != null) {
+                        try {
+                            new Thread(() -> {
+                                ReceiveFile fileTransfer = new ReceiveFile(Constants.CLIENT_PORT);
+                                fileTransfer.receive(file.getAbsolutePath());
+                            }).start();
+                            fileCatalog.download(user.getUsername(), selectedItem.split(",")[0]);
+                            showAlert("File downloaded!");
+                        } catch (RemoteException e) {
+                            showAlert("Failed to communicate with server");
+                        } catch (PermissionDeniedException e) {
+                            showAlert("Permission denied!");
+                        }
+                    }
+                } else {
+                    showAlert("Select a file from the list first");
+                }
+                break;
+            case "Upload":
+                dialog.showAndWait();
+                if(file != null) {
+                    try {
+                        System.out.println(permission.getText());
+                        if(fileCatalog.upload(user.getUsername(),file.getName(),(int)file.length(), permission.getText() != null ? permission.getText() : "public")) {
+                            FileTransfer fileTransfer = new FileTransfer("localhost", Constants.SERVER_PORT);
+                            fileTransfer.send(file);
+                        }
+                    } catch (RemoteException e) {
+                        showAlert("Failed to communicate with server");
+                    } catch (FileAlreadyExistsException e) {
+                        showAlert("File already exists!");
+                    } catch (PermissionDeniedException e) {
+                        showAlert("Permission denied!");
+                    }
                 }
                 break;
             case "Edit":
                 System.out.println("Edit files");
+                String edit = (String)view.getListView().getSelectionModel().getSelectedItem();
+                if(edit != null) {
+                    String name = edit.split(",")[0];
+                    FileDTO file = null;
+                    for(FileDTO f : files) {
+                        if(f.getFileName().equals(name)) {
+                            file = f;
+                            break;
+                        }
+                    }
+                    if(file != null) {
+                        nameField.setText(file.getFileName());
+                        permission2.setText(file.getFilePermission());
+                        editDialog.showAndWait();
+                        try {
+                            fileCatalog.editFile(user.getUsername(), file.getFileName(), nameField.getText(), permission2.getText());
+                        } catch (RemoteException e) {
+                            showAlert("Failed to communicate with server");
+                        } catch (PermissionDeniedException e) {
+                            showAlert("Permission denied");
+                        }
+                    }
+                } else {
+                    showAlert("Select a file from the list first");
+                }
+                break;
+            case "Delete":
+                System.out.println("deleting files");
+                String delete = (String)view.getListView().getSelectionModel().getSelectedItem();
+                if(delete != null) {
+                    String name = delete.split(",")[0];
+                    try {
+                        fileCatalog.deleteFile(user.getUsername(), name);
+                    } catch (RemoteException e) {
+                        showAlert("Failed to communicate with server");
+                    } catch (FileDoesNotExistException e) {
+                        showAlert("File does not exist.");
+                    } catch (PermissionDeniedException e) {
+                        showAlert("Permission denied.");
+                    }
+                }
+                break;
+            case "Notify":
+                System.out.println("Notify files");
+                String notify = (String)view.getListView().getSelectionModel().getSelectedItem();
+                if(notify != null) {
+                    String name = notify.split(",")[0];
+                    try {
+                        fileCatalog.notifyMe(user.getUsername(), name);
+                    } catch (RemoteException e) {
+                        showAlert("Failed to communicate with server");
+                    }
+                }
                 break;
             default:
                 break;
@@ -76,6 +168,8 @@ public class Controller {
                 try {
                     user = fileCatalog.login(username.getText(), password.getText());
                     view.enableButtons();
+                    loggedIn = true;
+                    new Thread(new PollNotification()).start();
                     showAlert("You have logged in!");
                 } catch (RemoteException e) {
                     showAlert("Failed to communicate with server");
@@ -89,7 +183,13 @@ public class Controller {
     }
 
     public void logoutHandler() {
+        try {
+            fileCatalog.logout(user.getUsername());
+        } catch (RemoteException e) {
+            showAlert("Failed to communicate with server");
+        }
         view.disableButtons();
+        loggedIn = false;
         showAlert("Logged out!");
     }
 
@@ -124,6 +224,34 @@ public class Controller {
                     showAlert("User does not exist");
                 } catch (WrongCredentialsException e) {
                     showAlert("Wrong username or password");
+                }
+            }
+        }
+    }
+
+    public void handleChoose(Stage primaryStage, FileChooser fileChooser) {
+        file = fileChooser.showOpenDialog(primaryStage);
+    }
+
+    private class PollNotification implements Runnable {
+
+        @Override
+        public void run() {
+            while(loggedIn) {
+                try {
+                    StringBuilder sb = new StringBuilder();
+                    List<NotificationDTO> notifications = (List<NotificationDTO>)fileCatalog.pollNotifications(user.getUsername());
+                    for(NotificationDTO n : notifications) {
+                        sb.append(n.getUser() + " did action: " + n.getAction() + "\n");
+                    }
+                    showAlert(sb.toString());
+                } catch (RemoteException e) {
+                    showAlert("Failed to communicate with server");
+                }
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
         }

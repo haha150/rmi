@@ -3,9 +3,11 @@ package org.inlm3.server.integration;
 import org.hibernate.Session;
 import org.inlm3.server.exception.FileAlreadyExistsException;
 import org.inlm3.server.exception.FileDoesNotExistException;
+import org.inlm3.server.exception.PermissionDeniedException;
 import org.inlm3.server.model.File;
 import org.inlm3.server.model.User;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class FileDAO {
@@ -27,14 +29,17 @@ public class FileDAO {
 
         session.close();
 
+        List<File> remove = new ArrayList<>();
+
         for (File f : files) {
             if (!f.getFilePermission().equalsIgnoreCase("public")) {
-                files.remove(f);
+                remove.add(f);
             }
         }
 
-        return files;
+        files.removeAll(remove);
 
+        return files;
     }
 
     public List<File> getAllPrivateFiles(String username) {
@@ -48,11 +53,17 @@ public class FileDAO {
 
         session.close();
 
+        List<File> remove = new ArrayList<>();
+
         for (File f : files) {
             if (!f.getUsername().equals(username)) {
-                files.remove(f);
+                remove.add(f);
+            } else if (f.getFilePermission().equalsIgnoreCase("public")) {
+                remove.add(f);
             }
         }
+
+        files.removeAll(remove);
 
         return files;
     }
@@ -61,7 +72,6 @@ public class FileDAO {
 
         File file = new File(name,size,user,permission);
 
-        // check if user exists!
         if(doesFileExist(name)) {
             throw new FileAlreadyExistsException();
         }
@@ -90,11 +100,17 @@ public class FileDAO {
         return false;
     }
 
-    public void deleteFile(String name) throws FileDoesNotExistException {
+    public void deleteFile(User user, String name) throws FileDoesNotExistException, PermissionDeniedException {
         File file = getFileByName(name);
 
         if(file == null) {
             throw new FileDoesNotExistException();
+        }
+
+        if(!(file.getFileOwner() == user)) {
+            if(!file.getFilePermission().equalsIgnoreCase("public")) {
+                throw new PermissionDeniedException();
+            }
         }
 
         Session session = sessionFactory.getSession();
@@ -104,7 +120,18 @@ public class FileDAO {
         session.close();
     }
 
-    private File getFileByName(String name) {
+    public void editFile(String oldName, String newName, String permission) {
+        File file = getFileByName(oldName);
+        file.setFileName(newName);
+        file.setFilePermission(permission);
+        Session session = sessionFactory.getSession();
+        session.beginTransaction();
+        session.update(file);
+        session.getTransaction().commit();
+        session.close();
+    }
+
+    public File getFileByName(String name) {
         Session session = sessionFactory.getSession();
         String query = "from File where filename='" + name + "'";
         session.beginTransaction();
@@ -112,10 +139,7 @@ public class FileDAO {
         session.getTransaction().commit();
         session.close();
         if(files.size() > 0) {
-            File file = files.get(0);
-            if(file != null && file.getUsername().equals(name)) {
-                return file;
-            }
+            return files.get(0);
         }
         return null;
     }
