@@ -102,7 +102,7 @@ public class Controller extends UnicastRemoteObject implements FileCatalog {
                             for (File f : files) {
                                 if(f.getFileName().equals(name)) {
                                     synchronized (notifications) {
-                                        notifications.add(new Notification("Download", username));
+                                        notifications.add(new Notification("Download " + name, username));
                                     }
                                 }
                             }
@@ -142,7 +142,7 @@ public class Controller extends UnicastRemoteObject implements FileCatalog {
                     for (File f : files) {
                         if(f.getFileName().equals(newName)) {
                             synchronized (notifications) {
-                                notifications.add(new Notification("Edit", username));
+                                notifications.add(new Notification("Edit " + newName, username));
                             }
                         }
                     }
@@ -169,7 +169,7 @@ public class Controller extends UnicastRemoteObject implements FileCatalog {
                 for (File f : files) {
                     if(f.getFileName().equals(name)) {
                         synchronized (notifications) {
-                            notifications.add(new Notification("Delete", username));
+                            notifications.add(new Notification("Delete + " + name, username));
                         }
                     }
                 }

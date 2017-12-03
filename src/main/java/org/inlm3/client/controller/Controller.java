@@ -146,6 +146,7 @@ public class Controller {
                     String name = delete.split(",")[0];
                     try {
                         fileCatalog.deleteFile(user.getUsername(), name);
+                        showAlert("Deleted file " + name);
                     } catch (RemoteException e) {
                         showAlert("Failed to communicate with server");
                     } catch (FileDoesNotExistException e) {
@@ -164,6 +165,7 @@ public class Controller {
                     String name = notify.split(",")[0];
                     try {
                         fileCatalog.notifyMe(user.getUsername(), name);
+                        showAlert("Added notification for " + name);
                     } catch (RemoteException e) {
                         showAlert("Failed to communicate with server");
                     }
