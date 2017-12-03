@@ -20,7 +20,6 @@ public class UserDAO {
 
         User user = new User(username, password);
 
-        // check if user exists!
         if(doesUserExist(username)) {
             throw new UserAlreadyExistsException();
         }
@@ -35,7 +34,6 @@ public class UserDAO {
     public void unegisterUser(String username, String password) throws UserDoesNotExistException, WrongCredentialsException {
         User user = getUserByName(username);
 
-        // check if user exists!
         if(user == null) {
             throw new UserDoesNotExistException();
         }

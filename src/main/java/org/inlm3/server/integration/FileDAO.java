@@ -24,7 +24,7 @@ public class FileDAO {
 
         String query = "from File";
 
-        Transaction transaction = session.beginTransaction();
+        session.beginTransaction();
         List<File> files = session.createQuery(query).list();
         session.getTransaction().commit();
         session.close();
