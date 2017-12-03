@@ -35,7 +35,6 @@ public class Controller extends UnicastRemoteObject implements FileCatalog {
     public void register(String username, String password) throws RemoteException, UserAlreadyExistsException {
         try {
             userDAO.registerUser(username,password);
-            users.add(userDAO.getUserByName(username));
         } catch (UserAlreadyExistsException e) {
             throw e;
         }

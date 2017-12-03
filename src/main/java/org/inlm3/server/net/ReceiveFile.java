@@ -20,7 +20,7 @@ public class ReceiveFile {
                 new Thread(() -> {
                     BufferedReader sin = null;
                     InputStream in = null;
-                    OutputStream output = null;
+                    OutputStream out = null;
                     PrintWriter sout = null;
                     try {
                         sin = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -28,17 +28,17 @@ public class ReceiveFile {
                         sout = new PrintWriter(clientSocket.getOutputStream(), true);
                         sout.println("OK");
                         in = clientSocket.getInputStream();
-                        output = new FileOutputStream(filePath + "\\" + fileName);
+                        out = new FileOutputStream(filePath + "\\" + fileName);
                         byte[] buffer = new byte[1024];
                         int bytes;
                         while ((bytes = in.read(buffer)) != -1) {
-                            output.write(buffer, 0, bytes);
+                            out.write(buffer, 0, bytes);
                         }
                     } catch (Exception e) {
                         System.out.println(e);
                     } finally {
                         try {
-                            output.close();
+                            out.close();
                             sin.close();
                             in.close();
                             sout.close();
